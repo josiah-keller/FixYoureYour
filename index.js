@@ -110,6 +110,10 @@ function processTweets(tweets) {
     tweets.forEach((tweet, index) => {
         var word = pickWord(tweet.text),
             wordIndex, correctWord, correction;
+        if (tweet.text.indexOf("RT") === 0) {
+            // Skip retweets
+            return;
+        }
         if (word === null){ 
             // Skip this tweet
             return;
@@ -202,7 +206,7 @@ function logCorrection(tweet, correction) {
 function tweetCorrection(tweet, correction) {
     twitter.postTweet({
         status: "@" + tweet.user.screen_name + " *" + correction,
-        in_reply_to_status_id: tweet.id
+        in_reply_to_status_id: tweet.id_str
     }, (err, response, body) => {
         console.error("TWEET ERROR:", err, response);
     }, (data) => {
