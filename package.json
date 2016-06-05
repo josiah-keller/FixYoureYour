@@ -1,0 +1,12 @@
+{
+  "name": "fix-youre-your",
+  "version": "0.1.0",
+  "description": "A Twitter bot that 'corrects' peoples' use of words like your and you're.",
+  "license": "MIT",
+  "author": {
+    "name": "Josiah Keller"
+  },
+  "dependencies": {
+    "twitter-node-client": "0.0.6"
+  }
+}
