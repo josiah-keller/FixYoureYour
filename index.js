@@ -112,10 +112,12 @@ function processTweets(tweets) {
             wordIndex, correctWord, correction;
         if (tweet.text.indexOf("RT") === 0) {
             // Skip retweets
+            console.log("Rejecting tweet because: retweet");
             return;
         }
         if (word === null){ 
             // Skip this tweet
+            console.log("Rejecting tweet because: no matching words");
             return;
         }
         wordIndex = tweet.text.indexOf(word);
