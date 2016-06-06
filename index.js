@@ -13,7 +13,7 @@ const CORRECTIONS = {
 const CORRECTION_PROBABILITY_SPACE = 201;
 const MAX_CYCLE_TWEETS = 5;
 
-var interactionsHistory = {}, lastMentionId = 1, lastCycleTime = 0;
+var interactionsHistory = {}, engagementHistory = [], lastMentionId = 1, lastCycleTime = 0;
 
 var twitter = new Twitter(twitterConfig);
 
@@ -27,6 +27,7 @@ function initialize() {
         }
         var state = JSON.parse(data);
         interactionsHistory = data.interactionsHistory || {};
+        engagementHistory = data.engagementHistory || [];
         lastMentionId = data.lastMentionId || 1;
         lastCycleTime = data.lastCycleTime || 0;
         
@@ -51,7 +52,8 @@ function saveState() {
     var state = JSON.stringify({
         interactionsHistory: interactionsHistory,
         lastMentionId: lastMentionId,
-        lastCycleTime: lastCycleTime
+        lastCycleTime: lastCycleTime,
+        engagementHistory: engagementHistory
     });
     fs.writeFile("data.json", state, (err) => {
         if (err) {
@@ -139,6 +141,11 @@ function processTweets(tweets) {
             console.log("Rejecting tweet because: no matching words");
             return;
         }
+        if (engagementHistory.indexOf(tweet.id_str) !== -1) {
+            // Skip tweet if we've already messed with this one
+            console.log("Rejecting tweet because: already engaged");
+            return;
+        }
         if (tweetInappropriate(tweet)) {
             // Skip tweets with inappropriate content or from inappropriate accounts
             console.log("Rejecting tweet because: inappropriate");
@@ -153,6 +160,7 @@ function processTweets(tweets) {
         tweetCorrection(tweet, correction);
         
         count++;
+        engagementHistory.push(tweet.id_str);
     });
 }
 
