@@ -11,6 +11,7 @@ const CORRECTIONS = {
     "yer": 200
 };
 const CORRECTION_PROBABILITY_SPACE = 201;
+const MAX_CYCLE_TWEETS = 5;
 
 var interactionsHistory = {}, lastMentionId = 1, lastCycleTime = 0;
 
@@ -107,7 +108,7 @@ function doSearch() {
     twitter.getSearch({
         q: SEARCH_WORDS.join(" "),
         lang: "en",
-        count: 8
+        count: 15
     }, (err, response, body) => {
         console.error("SEARCH ERROR:", err, response);
     }, (data) => {
@@ -120,9 +121,14 @@ function doSearch() {
  * Takes search results and goes through the process of responding to them
  */
 function processTweets(tweets) {
+    var count = 0;
     tweets.forEach((tweet, index) => {
         var word = pickWord(tweet.text),
             wordIndex, correctWord, correction;
+        if (count >= MAX_CYCLE_TWEETS) {
+            // Don't go over the limit
+            return;
+        }
         if (tweet.text.indexOf("RT") === 0) {
             // Skip retweets
             console.log("Rejecting tweet because: retweet");
@@ -145,6 +151,8 @@ function processTweets(tweets) {
       
         logCorrection(tweet, correction);
         tweetCorrection(tweet, correction);
+        
+        count++;
     });
 }
 
