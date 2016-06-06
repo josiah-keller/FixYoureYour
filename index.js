@@ -1,6 +1,7 @@
 const fs = require("fs");
 const Twitter = require("twitter-node-client").Twitter;
 const twitterConfig = require("./twitter-config");
+const inappropriate = require("./inappropriate");
 
 const SEARCH_WORDS = ["your", "youre", "you're"];
 const CORRECTIONS = {
@@ -11,7 +12,7 @@ const CORRECTIONS = {
 };
 const CORRECTION_PROBABILITY_SPACE = 201;
 
-var interactionsHistory = {}, lastMentionId;
+var interactionsHistory = {}, lastMentionId = 1, lastCycleTime = 0;
 
 var twitter = new Twitter(twitterConfig);
 
@@ -26,9 +27,20 @@ function initialize() {
         var state = JSON.parse(data);
         interactionsHistory = data.interactionsHistory || {};
         lastMentionId = data.lastMentionId || 1;
+        lastCycleTime = data.lastCycleTime || 0;
         
-        start();
+        schedule();
     });
+}
+
+/**
+ * Sets a timeout of appropriate length for `start()`
+ */
+function schedule() {
+    var now = new Date().getTime(), delta = now - lastCycleTime, timeout = (30 * 60 * 1000) - delta, then = new Date(now + timeout);
+    if (timeout < 100) timeout = 100;
+    setTimeout(start, timeout);
+    console.log("\nNext cycle time:", then.toLocaleString());
 }
 
 /**
@@ -37,7 +49,8 @@ function initialize() {
 function saveState() {
     var state = JSON.stringify({
         interactionsHistory: interactionsHistory,
-        lastMentionId: lastMentionId
+        lastMentionId: lastMentionId,
+        lastCycleTime: lastCycleTime
     });
     fs.writeFile("data.json", state, (err) => {
         if (err) {
@@ -54,9 +67,9 @@ function start() {
     doSearch();
     
     processMentions();
-    
-    // Do the next one in half an hour
-    setTimeout(start, 30 * 60 * 1000);
+
+    lastCycleTime = new Date().getTime();
+    schedule();
 }
 
 /**
@@ -94,7 +107,7 @@ function doSearch() {
     twitter.getSearch({
         q: SEARCH_WORDS.join(" "),
         lang: "en",
-        count: 5
+        count: 8
     }, (err, response, body) => {
         console.error("SEARCH ERROR:", err, response);
     }, (data) => {
@@ -118,6 +131,11 @@ function processTweets(tweets) {
         if (word === null){ 
             // Skip this tweet
             console.log("Rejecting tweet because: no matching words");
+            return;
+        }
+        if (tweetInappropriate(tweet)) {
+            // Skip tweets with inappropriate content or from inappropriate accounts
+            console.log("Rejecting tweet because: inappropriate");
             return;
         }
         wordIndex = tweet.text.indexOf(word);
@@ -215,6 +233,40 @@ function tweetCorrection(tweet, correction) {
         var reply = JSON.parse(data);
         console.log("Tweeted correction to @" + tweet.user.screen_name, reply.id);
     });
+}
+
+/**
+ * Determines if a tweet is inappropriate
+ */
+function tweetInappropriate(tweet) {
+    if (tweet.possibly_sensitive) {
+        // Inappropriate if the possibly_sensitive flag is set
+        return true;
+    }
+    if (stringInappropriate(tweet.user.name)) {
+        // Inappropriate if the user's name matches the blacklist
+        return true;
+    }
+    if (stringInappropriate(tweet.user.screen_name)) {
+        // Inappropriate if the user's screen_name matches the blacklist
+        return true;
+    }
+    if (stringInappropriate(tweet.user.description)) {
+        // Inappropriate if the user's bio matches the blacklist
+        return true;
+    }
+    if (stringInappropriate(tweet.text)) {
+        // Inappropriate if the tweet itself matches the blacklist
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Checks if a string matches the inappropriate blacklist
+ */
+function stringInappropriate(str) {
+    return inappropriate.blacklistWords.some(v => str.indexOf(v) !== -1);
 }
 
 initialize();
