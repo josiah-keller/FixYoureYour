@@ -83,7 +83,7 @@ function processMentions() {
         count: 10,
         since_id: lastMentionId
     }, (err, response, body) => {
-        console.error("MENTIONS ERROR:", err, response);
+        console.error("MENTIONS ERROR:", err);
     }, (data) => {
         var response = JSON.parse(data), mentionsToReplyTo = [];
         response.forEach((tweet) => {
@@ -112,7 +112,7 @@ function doSearch() {
         lang: "en",
         count: 15
     }, (err, response, body) => {
-        console.error("SEARCH ERROR:", err, response);
+        console.error("SEARCH ERROR:", err);
     }, (data) => {
         var response = JSON.parse(data);
         processTweets(response.statuses);
@@ -244,7 +244,7 @@ function tweetCorrection(tweet, correction) {
         status: "@" + tweet.user.screen_name + " *" + correction,
         in_reply_to_status_id: tweet.id_str
     }, (err, response, body) => {
-        console.error("TWEET ERROR:", err, response);
+        console.error("TWEET ERROR:", err);
     }, (data) => {
         var reply = JSON.parse(data);
         console.log("Tweeted correction to @" + tweet.user.screen_name, reply.id);
