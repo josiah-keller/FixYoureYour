@@ -1,5 +1,5 @@
 # FixYoureYour
-FixYoureYour was a short-lived Twitter bot that I wrote as an experiment.  It trolls people by automatically "correcting" their usage of the words "you're" and "your" in Tweets, even if they got
+FixYoureYour was a short-lived Twitter bot that I wrote as an experiment.  It trolled people by automatically "correcting" their usage of the words "you're" and "your" in Tweets, even if they got
 it right before, and often with the wrong correction.
 
 You can see its handiwork here on Twitter at [@FixYoureYour](https://twitter.com/FixYoureYour) on Twitter, and you can read more about it [on my site](http://josiahkeller.com/fixyoureyour).
